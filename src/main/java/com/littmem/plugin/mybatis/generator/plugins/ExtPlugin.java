@@ -31,8 +31,6 @@ public class ExtPlugin extends PluginAdapter {
 
     private String mapperName;
 
-    private String xmlMapperName;
-
     private String xmlMapperExtName;
 
     private String extSuffix;
@@ -52,20 +50,20 @@ public class ExtPlugin extends PluginAdapter {
         if (extSuffix == null || "".equals(extSuffix)) {
             extSuffix = "Ext";
         }
-        if (mapperExtPackageName == null || "".equals(mapperExtPackageName)){
-            mapperExtPackageName = context.getJavaClientGeneratorConfiguration().getTargetPackage()+".ext";
+        if (mapperExtPackageName == null || "".equals(mapperExtPackageName)) {
+            mapperExtPackageName = context.getJavaClientGeneratorConfiguration().getTargetPackage() + ".ext";
         }
-        if (xmlMapperExtPackageName == null || "".equals(xmlMapperExtPackageName)){
-            xmlMapperExtPackageName = context.getSqlMapGeneratorConfiguration().getTargetPackage()+".ext";
+        if (xmlMapperExtPackageName == null || "".equals(xmlMapperExtPackageName)) {
+            xmlMapperExtPackageName = context.getSqlMapGeneratorConfiguration().getTargetPackage() + ".ext";
         }
 
         mapperName = introspectedTable.getMyBatis3JavaMapperType();
         mapperExtName = mapperName.replace("Mapper", extSuffix + "Mapper");
 
-        String[] stringArray= mapperExtName.split("\\.");
-        mapperExtName = mapperExtPackageName+"."+ stringArray[stringArray.length - 1];
+        String[] stringArray = mapperExtName.split("\\.");
+        mapperExtName = mapperExtPackageName + "." + stringArray[stringArray.length - 1];
 
-        xmlMapperName = introspectedTable.getMyBatis3XmlMapperFileName();
+        String xmlMapperName = introspectedTable.getMyBatis3XmlMapperFileName();
         xmlMapperExtName = xmlMapperName.replace("Mapper", extSuffix + "Mapper");
 
     }
@@ -74,7 +72,7 @@ public class ExtPlugin extends PluginAdapter {
     public List<GeneratedJavaFile> contextGenerateAdditionalJavaFiles() {
         List<GeneratedJavaFile> files = new ArrayList<GeneratedJavaFile>();
         if (isExtJavaFileExits()) {
-            System.out.println( mapperExtName + ".java exits do nothing.");
+            System.out.println(mapperExtName + ".java exits do nothing.");
             return files;
         }
         System.out.println("generate " + mapperExtName + ".java");
@@ -86,10 +84,10 @@ public class ExtPlugin extends PluginAdapter {
     public List<GeneratedXmlFile> contextGenerateAdditionalXmlFiles() {
         List<GeneratedXmlFile> files = new ArrayList<GeneratedXmlFile>();
         if (isExtXmlFileExits()) {
-            System.out.println( xmlMapperExtName + " exits do nothing.");
+            System.out.println(xmlMapperExtName + " exits do nothing.");
             return files;
         }
-        System.out.println("generate " + xmlMapperExtName );
+        System.out.println("generate " + xmlMapperExtName);
         files.add(generatedExtXmlFile());
         return files;
     }
@@ -107,16 +105,8 @@ public class ExtPlugin extends PluginAdapter {
         inter.setVisibility(JavaVisibility.PUBLIC);
 
         // 添加注解 与 注解引入
-        String anno = "@Mapper";
-        String annoClass = "org.apache.ibatis.annotations.Mapper";
-
-        System.out.println("anno = " + anno);
-        System.out.println("annoClass = " + annoClass);
-
-
-        inter.addAnnotation(anno);
-
-        inter.addImportedType(new FullyQualifiedJavaType(annoClass));
+        inter.addAnnotation("@Mapper");
+        inter.addImportedType(new FullyQualifiedJavaType("org.apache.ibatis.annotations.Mapper"));
 
         return new GeneratedJavaFile(inter, context.getJavaClientGeneratorConfiguration().getTargetProject(), new DefaultJavaFormatter());
     }
@@ -144,11 +134,11 @@ public class ExtPlugin extends PluginAdapter {
 
 
     private boolean isExtJavaFileExits() {
-        return new File(context.getJavaClientGeneratorConfiguration().getTargetProject() +"/"+ mapperExtName.replace('.','/')+ ".java").exists();
+        return new File(context.getJavaClientGeneratorConfiguration().getTargetProject() + "/" + mapperExtName.replace('.', '/') + ".java").exists();
     }
 
     private boolean isExtXmlFileExits() {
-        String fileName = context.getSqlMapGeneratorConfiguration().getTargetProject() + "/" + xmlMapperExtPackageName.replace('.','/')+"/"+ xmlMapperExtName;
+        String fileName = context.getSqlMapGeneratorConfiguration().getTargetProject() + "/" + xmlMapperExtPackageName.replace('.', '/') + "/" + xmlMapperExtName;
         System.out.println(fileName);
         return new File(fileName).exists();
     }
