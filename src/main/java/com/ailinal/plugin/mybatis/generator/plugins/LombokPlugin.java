@@ -1,4 +1,4 @@
-package com.littmem.plugin.mybatis.generator.plugins;
+package com.ailinal.plugin.mybatis.generator.plugins;
 
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;

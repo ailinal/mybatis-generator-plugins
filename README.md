@@ -47,7 +47,7 @@ mvn install
 ```
 - generatorConfig.xml
 ```xml
- <plugin type="com.littmem.plugin.mybatis.generator.plugins.ExtPlugin"/>
+ <plugin type="ExtPlugin"/>
 ```
 
 ## LombokPlugin
