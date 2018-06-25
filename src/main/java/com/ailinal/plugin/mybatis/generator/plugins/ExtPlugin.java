@@ -39,7 +39,7 @@ public class ExtPlugin extends PluginAdapter {
 
     private String xmlMapperExtPackageName;
 
-
+    @Override
     public boolean validate(List<String> warnings) {
         return true;
     }
@@ -79,7 +79,6 @@ public class ExtPlugin extends PluginAdapter {
         files.add(generatedExtJavaFile());
         return files;
     }
-
     @Override
     public List<GeneratedXmlFile> contextGenerateAdditionalXmlFiles() {
         List<GeneratedXmlFile> files = new ArrayList<GeneratedXmlFile>();
