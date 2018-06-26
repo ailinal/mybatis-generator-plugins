@@ -38,8 +38,13 @@ public class LombokPlugin extends PluginAdapter {
 
         topLevelClass.addAnnotation("@Data");
         topLevelClass.addAnnotation("@Builder");
+        topLevelClass.addAnnotation("@NoArgsConstructor");
+        topLevelClass.addAnnotation("@AllArgsConstructor");
+
         topLevelClass.addImportedType("lombok.Data");
         topLevelClass.addImportedType("lombok.Builder");
+        topLevelClass.addImportedType("lombok.NoArgsConstructor");
+        topLevelClass.addImportedType("lombok.AllArgsConstructor");
 
         return true;
     }
