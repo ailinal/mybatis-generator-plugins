@@ -17,6 +17,8 @@ import java.util.List;
  * @version 18-6-23
  */
 public class LombokPlugin extends PluginAdapter {
+
+    @Override
     public boolean validate(List<String> warnings) {
         return true;
     }
@@ -35,7 +37,9 @@ public class LombokPlugin extends PluginAdapter {
     public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
 
         topLevelClass.addAnnotation("@Data");
+        topLevelClass.addAnnotation("@Builder");
         topLevelClass.addImportedType("lombok.Data");
+        topLevelClass.addImportedType("lombok.Builder");
 
         return true;
     }
