@@ -2,7 +2,8 @@
 
 
 ## ExtPlugin
-在Mapper接口类同级生成ext包,并生成对应的extMapper,继承mybatis generator生成Mapper,xmlMapper同理;达到平时开发修改Ext内容,防止再次使用mybatis generator生成文件被覆盖;
+在Mapper接口类同级生成ext包,并生成对应的extMapper,继承mybatis generator生成Mapper,xmlMapper同理;达到平时开发修改Ext内容,防止再次使用mybatis generator生成文件被覆盖;    
+生成的xml文件不再追加代码，而是覆盖代码
 
 ### 使用
 
@@ -47,7 +48,12 @@ mvn install
 ```
 - generatorConfig.xml
 ```xml
- <plugin type="ExtPlugin"/>
+<plugin type="ExtPlugin(全类名)">
+    <!-- 生成额外Mapper接口名，（原Mapper接口名UsersMapper ==> Users + extSuffix + Mapper） -->
+    <property name = "extSuffix" value = "XXX(自己取名，默认为Ext)">
+    <!-- 生成额外Mapper接口和xml文件存放包名，在原包下创建（com.dao.mapper ==> com.dao.mapper.extPackageName） -->
+    <property name = "extPackageName" value = "XXX(自己取名，默认为ext)"> 
+</plugin>
 ```
 
 ## LombokPlugin
