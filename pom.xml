@@ -7,6 +7,11 @@
     <groupId>com.ailinal.plugin</groupId>
     <artifactId>mybatis-generator-plugins</artifactId>
     <version>1.0.0.RELEASE</version>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
