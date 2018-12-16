@@ -13,6 +13,7 @@ import org.mybatis.generator.api.dom.xml.Document;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.codegen.XmlConstants;
+import org.mybatis.generator.config.TableConfiguration;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -106,42 +107,57 @@ public class ExtPlugin extends PluginAdapter {
         mapperCompleteName = introspectedTable.getMyBatis3JavaMapperType();
         String[] strings = mapperCompleteName.split("\\.");
         mapperName = strings[strings.length - 1];
-        mapperExtName = mapperName.replace("Mapper", this.extSuffix + "Mapper");
 
         mapperTargetProject = context.getJavaClientGeneratorConfiguration().getTargetProject();
-
-        String xmlMapperName = introspectedTable.getMyBatis3XmlMapperFileName();
-        xmlMapperExtName = xmlMapperName.replace("Mapper", this.extSuffix + "Mapper");
-
         xmlMapperTargetProject = context.getSqlMapGeneratorConfiguration().getTargetProject();
     }
 
     @Override
     public List<GeneratedJavaFile> contextGenerateAdditionalJavaFiles() {
         List<GeneratedJavaFile> files = new ArrayList<>();
-        if (isExtJavaFileExits()) {
-            System.out.println(mapperExtName + "java. exits do nothing.");
+
+        List<TableConfiguration> tableConfigurations = context.getTableConfigurations();
+        if(tableConfigurations != null && tableConfigurations.size() != 0) {
+            for(TableConfiguration tableConfiguration : tableConfigurations) {
+                mapperExtName = buildName(tableConfiguration) + extSuffix + "Mapper";
+                if("".equals(mapperExtName)) {
+                    System.out.println("table name error");
+                    continue;
+                }
+                if (isExtJavaFileExits()) {
+                    System.out.println(mapperExtName + "java. exits do nothing.");
+                    continue;
+                }
+                System.out.println("generate " + mapperExtName + ".java");
+                files.add(generatedExtJavaFile());
+            }
             return files;
         }
-        System.out.println("generate " + mapperExtName + ".java");
-        files.add(generatedExtJavaFile());
         return files;
     }
-
-
 
     @Override
     public List<GeneratedXmlFile> contextGenerateAdditionalXmlFiles() {
         List<GeneratedXmlFile> files = new ArrayList<>();
-        if (isExtXmlFileExits()) {
-            System.out.println(xmlMapperExtName + " exits do nothing.");
+        List<TableConfiguration> tableConfigurations = context.getTableConfigurations();
+        if(tableConfigurations != null && tableConfigurations.size() != 0) {
+            for(TableConfiguration tableConfiguration : tableConfigurations) {
+                xmlMapperExtName = buildName(tableConfiguration) + extSuffix + "Mapper.xml";
+                if("".equals(xmlMapperExtName)) {
+                    System.out.println("table name error");
+                    continue;
+                }
+                if (isExtXmlFileExits()) {
+                    System.out.println(xmlMapperExtName + "java. exits do nothing.");
+                    continue;
+                }
+                System.out.println("generate " + xmlMapperExtName + ".java");
+                files.add(generatedExtXmlFile());
+            }
             return files;
         }
-        System.out.println("generate " + xmlMapperExtName);
-        files.add(generatedExtXmlFile());
         return files;
     }
-
 
     @Override
     public boolean sqlMapGenerated(GeneratedXmlFile sqlMap, IntrospectedTable introspectedTable) {
@@ -155,7 +171,6 @@ public class ExtPlugin extends PluginAdapter {
         } catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
         }
-
         return true;
     }
 
@@ -204,6 +219,37 @@ public class ExtPlugin extends PluginAdapter {
 
     private boolean isExtXmlFileExits() {
         return new File(xmlMapperTargetProject + "/" + xmlMapperExtPackageName.replace('.', '/') + "/" + xmlMapperExtName).exists();
+    }
+
+
+    /**
+     * 首字符大写
+     * @param str
+     * @return
+     */
+    private String upperCase(String str) {
+        char[] ch = str.toCharArray();
+        if (ch[0] >= 'a' && ch[0] <= 'z') {
+            ch[0] = (char) (ch[0] - 32);
+        }
+        return new String(ch);
+    }
+
+    /**
+     * 根据表名生成驼峰式名称
+     * @param tableConfiguration
+     * @return
+     */
+    private String buildName(TableConfiguration tableConfiguration) {
+        StringBuilder stringBuilder = new StringBuilder();
+        String tableName = tableConfiguration.getTableName();
+        String[] strings = tableName.toLowerCase().split("_");
+        for(String s : strings) {
+            if(s != null && !"".equals(s)){
+                stringBuilder.append(upperCase(s));
+            }
+        }
+        return stringBuilder.toString();
     }
 
 
