@@ -51,8 +51,10 @@ mvn install
 <plugin type="ExtPlugin(全类名)">
     <!-- 生成额外Mapper接口名，（原Mapper接口名UsersMapper ==> Users + extSuffix + Mapper） -->
     <property name = "extSuffix" value = "XXX(自己取名，默认为Ext)">
-    <!-- 生成额外Mapper接口和xml文件存放包名，在原包下创建（com.dao.mapper ==> com.dao.mapper.extPackageName） -->
-    <property name = "extPackageName" value = "XXX(自己取名，默认为ext)"> 
+    <!-- 生成额外Mapper文件存放包名，默认在原Mapper文件所在包下创建ext -->
+    <property name = "mapperExtPackageName" value = "XXX(自己取名,生成额外的mapper文件所存的包)"> 
+    <!-- 生成额外Mapper.xml文件存放包名，默认在原Mapper.xml文件所在包下创建ext -->
+    <property name = "xmlMapperExtPackageName" value = "XXX(自己取名,生成额外的Mapper.xml文件所存的包)"> 
 </plugin>
 ```
 
