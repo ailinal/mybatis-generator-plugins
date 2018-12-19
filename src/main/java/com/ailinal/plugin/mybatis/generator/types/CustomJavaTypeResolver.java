@@ -12,11 +12,11 @@ import java.time.Instant;
 public class CustomJavaTypeResolver extends JavaTypeResolverDefaultImpl {
     public CustomJavaTypeResolver() {
         super();
-        typeMap.put(Types.TIMESTAMP, new JdbcTypeInformation("TIMESTAMP", //$NON-NLS-1$
+        typeMap.put(Types.TIMESTAMP, new JdbcTypeInformation("TIMESTAMP",
                 new FullyQualifiedJavaType(Instant.class.getName())));
-        typeMap.put(Types.DATE, new JdbcTypeInformation("DATE", //$NON-NLS-1$
+        typeMap.put(Types.DATE, new JdbcTypeInformation("DATE",
                 new FullyQualifiedJavaType(Instant.class.getName())));
-        typeMap.put(Types.TIME, new JdbcTypeInformation("TIME", //$NON-NLS-1$
+        typeMap.put(Types.TIME, new JdbcTypeInformation("TIME",
                 new FullyQualifiedJavaType(Instant.class.getName())));
     }
 }
