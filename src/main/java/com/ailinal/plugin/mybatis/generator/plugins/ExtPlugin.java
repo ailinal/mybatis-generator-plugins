@@ -13,10 +13,11 @@ import org.mybatis.generator.api.dom.xml.Document;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.codegen.XmlConstants;
-import org.mybatis.generator.config.TableConfiguration;
+import org.mybatis.generator.logging.Log;
+import org.mybatis.generator.logging.LogFactory;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -28,20 +29,12 @@ import java.util.List;
  */
 public class ExtPlugin extends PluginAdapter {
 
+    private final Log log = LogFactory.getLog(ExtPlugin.class);
+
     /**
      * 额外后缀，如（UsersMapper => Users + extSuffix + Mapper）
      */
     private String extSuffix;
-
-    /**
-     * mapper完整名称，包名+文件名
-     */
-    private String mapperCompleteName;
-
-    /**
-     * mapper文件名称
-     */
-    private String mapperName;
 
     /**
      * 额外的mapper包名称
@@ -49,9 +42,9 @@ public class ExtPlugin extends PluginAdapter {
     private String mapperExtPackageName;
 
     /**
-     * 额外的mapper文件名称
+     * 额外的mapper对应的xml文件包名称
      */
-    private String mapperExtName;
+    private String xmlMapperExtPackageName;
 
     /**
      * 额外的mapper文件的项目磁盘路径
@@ -59,22 +52,14 @@ public class ExtPlugin extends PluginAdapter {
     private String mapperTargetProject;
 
     /**
-     * 额外的mapper对应的xml文件包名称
-     */
-    private String xmlMapperExtPackageName;
-
-    /**
-     * 额外的mapper对应的xml文件名
-     */
-    private String xmlMapperExtName;
-
-    /**
      * 额外的mapper对应的xml文件的项目磁盘路径
      */
     private String xmlMapperTargetProject;
 
+
     @Override
     public boolean validate(List<String> warnings) {
+
         return true;
     }
 
@@ -97,139 +82,104 @@ public class ExtPlugin extends PluginAdapter {
             xmlMapperExtPackageName = context.getSqlMapGeneratorConfiguration().getTargetPackage() + ".ext";
         }
 
-        mapperCompleteName = introspectedTable.getMyBatis3JavaMapperType();
-        String[] strings = mapperCompleteName.split("\\.");
-        mapperName = strings[strings.length - 1];
-
         mapperTargetProject = context.getJavaClientGeneratorConfiguration().getTargetProject();
         xmlMapperTargetProject = context.getSqlMapGeneratorConfiguration().getTargetProject();
     }
 
-    @Override
-    public List<GeneratedJavaFile> contextGenerateAdditionalJavaFiles() {
-        List<GeneratedJavaFile> files = new ArrayList<>();
-
-        List<TableConfiguration> tableConfigurations = context.getTableConfigurations();
-        if(tableConfigurations != null && tableConfigurations.size() != 0) {
-            for(TableConfiguration tableConfiguration : tableConfigurations) {
-                mapperExtName = buildName(tableConfiguration) + extSuffix + "Mapper";
-                if("".equals(mapperExtName)) {
-                    System.out.println("table name error");
-                    continue;
-                }
-                if (isExtJavaFileExits()) {
-                    System.out.println(mapperExtName + "java. exits do nothing.");
-                    continue;
-                }
-                System.out.println("generate " + mapperExtName + ".java");
-                files.add(generatedExtJavaFile());
-            }
-            return files;
-        }
-        return files;
-    }
 
     @Override
-    public List<GeneratedXmlFile> contextGenerateAdditionalXmlFiles() {
-        List<GeneratedXmlFile> files = new ArrayList<>();
+    public List<GeneratedJavaFile> contextGenerateAdditionalJavaFiles(IntrospectedTable introspectedTable) {
 
-        List<TableConfiguration> tableConfigurations = context.getTableConfigurations();
-        if(tableConfigurations != null && tableConfigurations.size() != 0) {
-            for(TableConfiguration tableConfiguration : tableConfigurations) {
-                xmlMapperExtName = buildName(tableConfiguration) + extSuffix + "Mapper.xml";
-                if("".equals(xmlMapperExtName)) {
-                    System.out.println("table name error");
-                    continue;
-                }
-                if (isExtXmlFileExits()) {
-                    System.out.println(xmlMapperExtName + "java. exits do nothing.");
-                    continue;
-                }
-                System.out.println("generate " + xmlMapperExtName + ".java");
-                files.add(generatedExtXmlFile());
-            }
-            return files;
+        //原mapper全限定java类名
+        String originFullQualifiedJavaTypeName = introspectedTable.getMyBatis3JavaMapperType();
+        int lastIndex = originFullQualifiedJavaTypeName.lastIndexOf('.');
+        //新的mapper非限定类名
+        String newNonQualifiedJavaTypeName = originFullQualifiedJavaTypeName.substring(lastIndex + 1).replace("Mapper", extSuffix + "Mapper");
+
+        //已存在ext不生成
+        if (isExtJavaFileExits(newNonQualifiedJavaTypeName)) {
+
+            log.warn(newNonQualifiedJavaTypeName.concat(".java already exists. do nothing."));
+            return Collections.emptyList();
         }
-        return files;
+
+        return Collections.singletonList(generatedExtJavaFile(originFullQualifiedJavaTypeName, newNonQualifiedJavaTypeName));
     }
+
 
     /**
-     * 生成Ext接口
+     * 生成extMapper
      *
-     * @return Mapper.java
+     * @param originFullQualifiedJavaTypeName 原始Mapper的全限定类名
+     * @param newNonQualifiedJavaTypeName     extMapper的非限定类名
+     * @return 生成的extMapper
      */
-    private GeneratedJavaFile generatedExtJavaFile() {
+    private GeneratedJavaFile generatedExtJavaFile(String originFullQualifiedJavaTypeName, String newNonQualifiedJavaTypeName) {
+
 
         // 拼装接口
-        Interface inter = new Interface(mapperExtPackageName + "." + mapperExtName);
-        inter.addSuperInterface(new FullyQualifiedJavaType(mapperName));
+        Interface inter = new Interface(mapperExtPackageName + "." + newNonQualifiedJavaTypeName);
+        inter.addSuperInterface(new FullyQualifiedJavaType(originFullQualifiedJavaTypeName));
         inter.setVisibility(JavaVisibility.PUBLIC);
 
         // 添加注解 与 注解引入
+        inter.addImportedType(
+                new FullyQualifiedJavaType("org.apache.ibatis.annotations.Mapper"));
         inter.addAnnotation("@Mapper");
-        inter.addImportedType(new FullyQualifiedJavaType("org.apache.ibatis.annotations.Mapper"));
-        inter.addImportedType(new FullyQualifiedJavaType(mapperCompleteName));
 
         return new GeneratedJavaFile(inter, mapperTargetProject, new DefaultJavaFormatter());
     }
 
+    private boolean isExtJavaFileExits(String nonQualifiedJavaTypeName) {
+        return new File(mapperTargetProject + "/" + mapperExtPackageName.replace(".", "/") + "/" + nonQualifiedJavaTypeName + ".java").exists();
+    }
+
+
+    @Override
+    public List<GeneratedXmlFile> contextGenerateAdditionalXmlFiles(IntrospectedTable introspectedTable) {
+
+        String originFullQualifiedJavaTypeName = introspectedTable.getMyBatis3JavaMapperType();
+        int lastIndex = originFullQualifiedJavaTypeName.lastIndexOf('.');
+        //新的mapper非限定类名
+        String newNonQualifiedJavaTypeName = originFullQualifiedJavaTypeName.substring(lastIndex + 1).replace("Mapper", extSuffix + "Mapper");
+
+        String extMapperFullQualifiedJavaTypeName = mapperExtPackageName
+                .concat(".")
+                .concat(newNonQualifiedJavaTypeName);
+
+        String extXmlFileName = introspectedTable.getMyBatis3XmlMapperFileName().replace("Mapper", extSuffix + "Mapper");
+
+        //已存在ext不生成
+        if (isExtXmlFileExits(extXmlFileName)) {
+            log.warn(extXmlFileName.concat(" already exists. do nothing."));
+            return Collections.emptyList();
+        }
+
+        return Collections.singletonList(generatedExtXmlFile(extMapperFullQualifiedJavaTypeName, extXmlFileName));
+    }
+
     /**
-     * 生成ExtXml
-     *
-     * @return Mapper.xml
+     * @param extMapperFullQualifiedJavaTypeName extMapper的全限定类名,用作xml的namespace
+     * @param xmlFileName                        extXml的名称
+     * @return 生成的extXml
      */
-    private GeneratedXmlFile generatedExtXmlFile() {
+    private GeneratedXmlFile generatedExtXmlFile(String extMapperFullQualifiedJavaTypeName, String xmlFileName) {
 
         // 创建文档对象
         Document document = new Document(XmlConstants.MYBATIS3_MAPPER_PUBLIC_ID, XmlConstants.MYBATIS3_MAPPER_SYSTEM_ID);
         // 创建根节点
         XmlElement root = new XmlElement("mapper");
-        root.addAttribute(new Attribute("namespace", mapperExtPackageName + "." + mapperExtName));
+        root.addAttribute(new Attribute("namespace", extMapperFullQualifiedJavaTypeName));
         root.addElement(new TextElement(""));
         document.setRootElement(root);
 
         // 生成ext xml文件
-        return new GeneratedXmlFile(document, xmlMapperExtName, xmlMapperExtPackageName, xmlMapperTargetProject, false, context.getXmlFormatter());
-    }
-
-    private boolean isExtJavaFileExits() {
-        return new File(mapperTargetProject + "/" + mapperExtPackageName.replace(".","/") + "/" +mapperExtName  + ".java").exists();
-    }
-
-    private boolean isExtXmlFileExits() {
-        return new File(xmlMapperTargetProject + "/" + xmlMapperExtPackageName.replace('.', '/') + "/" + xmlMapperExtName).exists();
+        return new GeneratedXmlFile(document, xmlFileName, xmlMapperExtPackageName, xmlMapperTargetProject, false, context.getXmlFormatter());
     }
 
 
-    /**
-     * 首字符大写
-     * @param str
-     * @return
-     */
-    private String upperCase(String str) {
-        char[] ch = str.toCharArray();
-        if (ch[0] >= 'a' && ch[0] <= 'z') {
-            ch[0] = (char) (ch[0] - 32);
-        }
-        return new String(ch);
+    private boolean isExtXmlFileExits(String xmlFileName) {
+        return new File(xmlMapperTargetProject + "/" + xmlMapperExtPackageName.replace('.', '/') + "/" + xmlFileName).exists();
     }
-
-    /**
-     * 根据表名生成驼峰式名称
-     * @param tableConfiguration
-     * @return
-     */
-    private String buildName(TableConfiguration tableConfiguration) {
-        StringBuilder stringBuilder = new StringBuilder();
-        String tableName = tableConfiguration.getTableName();
-        String[] strings = tableName.toLowerCase().split("_");
-        for(String s : strings) {
-            if(s != null && !"".equals(s)){
-                stringBuilder.append(upperCase(s));
-            }
-        }
-        return stringBuilder.toString();
-    }
-
 
 }
