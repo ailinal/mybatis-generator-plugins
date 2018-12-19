@@ -16,7 +16,6 @@ import org.mybatis.generator.codegen.XmlConstants;
 import org.mybatis.generator.config.TableConfiguration;
 
 import java.io.File;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,11 +32,6 @@ public class ExtPlugin extends PluginAdapter {
      * 额外后缀，如（UsersMapper => Users + extSuffix + Mapper）
      */
     private String extSuffix;
-
-    /**
-     * 生成额外Mapper文件，xml文件存放的包名（原Mapper文件所在包下）
-     */
-    private String extPackageName;
 
     /**
      * mapper完整名称，包名+文件名
@@ -86,22 +80,21 @@ public class ExtPlugin extends PluginAdapter {
 
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
-
+        //从配置中读额外后缀
         extSuffix = properties.getProperty("extSuffix");
-
-        extPackageName = properties.getProperty("extPackageName");
+        //从配置中读额外mapper生成的包名
+        mapperExtPackageName = properties.getProperty("mapperExtPackageName");
+        //从配置中读额外mapper.xml生成的包名
+        xmlMapperExtPackageName = properties.getProperty("xmlMapperExtPackageName");
 
         if (this.extSuffix == null || "".equals(this.extSuffix)) {
             this.extSuffix = "Ext";
         }
-        if (this.extPackageName == null || "".equals(this.extPackageName)) {
-            this.extPackageName = "ext";
-        }
         if (mapperExtPackageName == null || "".equals(mapperExtPackageName)) {
-            mapperExtPackageName = context.getJavaClientGeneratorConfiguration().getTargetPackage() + "." +extPackageName;
+            mapperExtPackageName = context.getJavaClientGeneratorConfiguration().getTargetPackage() + ".ext";
         }
         if (xmlMapperExtPackageName == null || "".equals(xmlMapperExtPackageName)) {
-            xmlMapperExtPackageName = context.getSqlMapGeneratorConfiguration().getTargetPackage() + "." +extPackageName;
+            xmlMapperExtPackageName = context.getSqlMapGeneratorConfiguration().getTargetPackage() + ".ext";
         }
 
         mapperCompleteName = introspectedTable.getMyBatis3JavaMapperType();
@@ -139,6 +132,7 @@ public class ExtPlugin extends PluginAdapter {
     @Override
     public List<GeneratedXmlFile> contextGenerateAdditionalXmlFiles() {
         List<GeneratedXmlFile> files = new ArrayList<>();
+
         List<TableConfiguration> tableConfigurations = context.getTableConfigurations();
         if(tableConfigurations != null && tableConfigurations.size() != 0) {
             for(TableConfiguration tableConfiguration : tableConfigurations) {
@@ -157,21 +151,6 @@ public class ExtPlugin extends PluginAdapter {
             return files;
         }
         return files;
-    }
-
-    @Override
-    public boolean sqlMapGenerated(GeneratedXmlFile sqlMap, IntrospectedTable introspectedTable) {
-        try {
-            //反射改isMergeable的值
-            //为false后，XXXMapper.xml文件不追加，变为覆盖
-            Field mergeable = sqlMap.getClass().getDeclaredField("isMergeable");
-            mergeable.setAccessible(true);
-            mergeable.setBoolean(sqlMap,false);
-
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        return true;
     }
 
     /**
