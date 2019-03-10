@@ -35,7 +35,7 @@ mvn install
                         <scope>runtime</scope>
                     </dependency>
                     <dependency>
-                        <groupId>com.ailinal.plugin</groupId>
+                        <groupId>dev.metaspace.plugin</groupId>
                         <artifactId>mybatis-generator-plugins</artifactId>
                         <version>1.0.0.RELEASE</version>
                     </dependency>
