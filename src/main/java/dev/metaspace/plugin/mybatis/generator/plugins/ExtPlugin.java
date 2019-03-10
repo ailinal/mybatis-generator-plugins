@@ -1,4 +1,4 @@
-package com.ailinal.plugin.mybatis.generator.plugins;
+package dev.metaspace.plugin.mybatis.generator.plugins;
 
 import org.mybatis.generator.api.GeneratedJavaFile;
 import org.mybatis.generator.api.GeneratedXmlFile;

@@ -1,4 +1,4 @@
-package com.ailinal.plugin.mybatis.generator.types;
+package dev.metaspace.plugin.mybatis.generator.types;
 
 import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
 import org.mybatis.generator.internal.types.JavaTypeResolverDefaultImpl;
